@@ -51,7 +51,7 @@ const CropOverlay: React.FC<Props> = ({ containerWidth, containerHeight, selecti
           border: '2px solid rgba(255,255,255,0.95)',
           boxShadow: '0 0 0 1px rgba(0,0,0,0.25) inset',
           pointerEvents: 'auto', // allow dragging/resizing
-          background: 'rgba(255,255,255,0.02)' // tiny highlight to show active area if desired
+          background: 'transparent'
         }}
         className="crop-selection-rect"
       >
