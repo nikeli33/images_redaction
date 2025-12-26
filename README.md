@@ -1,73 +1,98 @@
-# Welcome to your Lovable project
+Please optimize the project for minimal bundle size and cleaner dependency graph,
+WITHOUT changing any existing functionality, UI behavior, or application logic.
 
-## Project info
+IMPORTANT CONSTRAINTS:
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+- Do NOT modify business logic.
+- Do NOT change visual behavior or UX.
+- Do NOT rewrite features or algorithms.
+- Only remove unused, redundant, or unnecessary code and dependencies.
+- Final app behavior must be 100% identical to current behavior.
 
-## How can I edit this code?
+Your task is purely optimization and cleanup.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## WHAT TO DO
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+1. Analyze the project structure and identify:
 
-Changes made via Lovable will be committed automatically to this repo.
+   - Unused npm dependencies in package.json
+   - Libraries that are imported but not actually used
+   - Dev dependencies that can be removed
+   - Duplicate or redundant helper utilities
+   - Dead code paths (unused functions, components, files)
+   - Old experimental files not referenced anywhere
+   - Unused assets (icons, images, fonts)
 
-**Use your preferred IDE**
+2. Optimize the build output:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+   - Ensure tree-shaking works correctly
+   - Remove unused exports
+   - Convert broad imports (e.g. `import * as X`) into named imports where applicable
+   - Remove unnecessary polyfills
+   - Ensure only required CSS is bundled
+   - Verify no unused global styles are included
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. Verify build configuration:
 
-Follow these steps:
+   - Check `vite.config.ts` (or equivalent) for unnecessary plugins
+   - Remove plugins not used in the actual build
+   - Ensure production build uses minification and compression
+   - Confirm that source maps are disabled for production (unless required)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Dependency audit:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+   - Identify libraries that can be replaced by native browser APIs
+   - Remove polyfills that modern browsers no longer require
+   - Remove duplicated libraries that do the same thing
+   - Keep only one solution per concern (e.g. one date lib, one image lib)
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. Tree-shaking & bundle cleanup:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+   - Ensure ES module syntax is used everywhere
+   - Avoid default exports where named exports work better for tree-shaking
+   - Remove side-effect imports
+   - Mark sideEffects: false in package.json where safe
 
-**Edit a file directly in GitHub**
+6. Build verification:
+   - Run `npm run build`
+   - Confirm no runtime or TypeScript errors
+   - Ensure the app behaves exactly the same as before
+   - Verify reduced bundle size (report before/after sizes)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## DELIVERABLES
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+After optimization, please provide:
 
-## What technologies are used for this project?
+1. A summary of what was removed or optimized:
 
-This project is built with:
+   - Removed packages
+   - Files deleted
+   - Config changes
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. A brief before/after comparison:
 
-## How can I deploy this project?
+   - Bundle size (before → after)
+   - Number of dependencies reduced
+   - Build time difference (if noticeable)
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+3. Confirmation that:
+   - No UI or functional changes occurred
+   - All features still work exactly the same
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## IMPORTANT RULES
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- DO NOT modify application logic or UI behavior.
+- DO NOT refactor working code for style reasons.
+- DO NOT change user-facing behavior.
+- DO NOT remove features.
+- ONLY optimize structure, dependencies, and build output.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+If something is unclear or risky, stop and report before making changes.
+
+Proceed carefully and conservatively.
