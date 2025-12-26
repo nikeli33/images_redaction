@@ -1,0 +1,15 @@
+
+The cropping UI has been updated to remove the miniature thumbnail preview. The `CropOverlay.tsx` component has been created and integrated into `CropMode.tsx` to provide the dimming and selection rectangle with handles.
+
+To verify the changes, please perform the following manual tests:
+1. Run the application (e.g., `npm run dev` or `bun run dev`).
+2. Navigate to the cropping functionality.
+3. Upload an image.
+4. Move and resize the selection rectangle.
+   - **Verify:** The small thumbnail preview should no longer appear inside the selection rectangle.
+   - **Verify:** The area outside the selection should be dimmed, while the selected area remains visually normal (or slightly highlighted) and shows a clear border and draggable handles.
+   - **Verify:** The drag and resize functionality of the selection rectangle and its handles should still work correctly.
+5. Click the 'Crop' action.
+   - **Verify:** The final cropped result should be correct and unchanged, indicating that the underlying cropping logic (which reads exact selection coordinates) is still functioning as expected.
+
+If the codebase uses Tailwind, you might consider converting the inline styles in `CropOverlay.tsx` to equivalent utility classes for consistency, as mentioned in the optional UX touches.

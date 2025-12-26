@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ImageUploader from './ImageUploader';
 import ProcessingResults from './ProcessingResults';
+import CropOverlay, { Rect } from './CropOverlay';
 
 const CropMode = () => {
   const [images, setImages] = useState<ImageFile[]>([]);
@@ -228,63 +229,22 @@ const CropMode = () => {
               <img
                 src={currentImage.preview}
                 alt="Предпросмотр обрезки"
-                className="w-full h-auto opacity-50"
+                className="w-full h-auto" // No opacity, overlay handles dimming
                 draggable={false}
               />
-              
-              {/* Crop Overlay */}
-              <div
-                className="absolute border-2 border-primary bg-transparent cursor-move"
-                style={{
-                  left: cropArea.x * displayScale,
-                  top: cropArea.y * displayScale,
+
+              <CropOverlay
+                containerWidth={currentImage.width * displayScale}
+                containerHeight={currentImage.height * displayScale}
+                selection={{
+                  x: cropArea.x * displayScale,
+                  y: cropArea.y * displayScale,
                   width: cropArea.width * displayScale,
                   height: cropArea.height * displayScale,
                 }}
-                onMouseDown={(e) => handleMouseDown(e, 'move')}
-              >
-                {/* Clear area inside crop */}
-                <div className="absolute inset-0 overflow-hidden">
-                  <img
-                    src={currentImage.preview}
-                    alt="Область обрезки"
-                    className="absolute"
-                    style={{
-                      left: -cropArea.x * displayScale,
-                      top: -cropArea.y * displayScale,
-                      width: currentImage.width ? currentImage.width * displayScale : 'auto',
-                    }}
-                    draggable={false}
-                  />
-                </div>
-                
-                {/* Move handle */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2 rounded-full bg-card/80 text-foreground pointer-events-none">
-                  <Move className="w-4 h-4" />
-                </div>
-                
-                {/* Resize handles */}
-                {['nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w'].map((handle) => (
-                  <div
-                    key={handle}
-                    className={`absolute w-3 h-3 bg-primary rounded-full border-2 border-card
-                      ${handle.includes('n') ? 'top-0 -translate-y-1/2' : ''}
-                      ${handle.includes('s') ? 'bottom-0 translate-y-1/2' : ''}
-                      ${handle.includes('w') ? 'left-0 -translate-x-1/2' : ''}
-                      ${handle.includes('e') ? 'right-0 translate-x-1/2' : ''}
-                      ${handle === 'n' || handle === 's' ? 'left-1/2 -translate-x-1/2' : ''}
-                      ${handle === 'e' || handle === 'w' ? 'top-1/2 -translate-y-1/2' : ''}
-                      ${handle.includes('n') && handle.includes('w') ? 'cursor-nw-resize' : ''}
-                      ${handle.includes('n') && handle.includes('e') ? 'cursor-ne-resize' : ''}
-                      ${handle.includes('s') && handle.includes('w') ? 'cursor-sw-resize' : ''}
-                      ${handle.includes('s') && handle.includes('e') ? 'cursor-se-resize' : ''}
-                      ${handle === 'n' || handle === 's' ? 'cursor-ns-resize' : ''}
-                      ${handle === 'e' || handle === 'w' ? 'cursor-ew-resize' : ''}
-                    `}
-                    onMouseDown={(e) => handleMouseDown(e, handle)}
-                  />
-                ))}
-              </div>
+                onStartDrag={(e) => handleMouseDown(e, 'move')}
+                onStartResize={handleMouseDown}
+              />
             </div>
           </div>
 

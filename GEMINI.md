@@ -1,193 +1,171 @@
-Please edit the file src/lib/imageProcessing.ts in this repo. Find the existing function
-export const compressImage = async (imageFile: ImageFile, mode: CompressionMode): Promise<ProcessedImage> => { ... }
-and replace it with the improved code below.
+Please edit the cropping UI so that no small "thumbnail preview" appears inside the crop selection rectangle.
 
-Goals:
+Context:
 
-- Prefer WEBP when supported (best compression). For PNG without transparency prefer converting to JPEG or WEBP.
-- If resulting blob is larger than original, automatically try lowering quality stepwise until it becomes smaller (or until minQuality).
-- Preserve PNG if image has transparency and WEBP is not supported.
-- Report the true compression ratio (allow negative values), do not clamp it to zero.
-- Keep code as browser-compatible TypeScript.
+- The cropping function correctly extracts the chosen area when the user presses "crop".
+- However, while selecting the area the UI currently renders an unwanted miniature thumbnail of the full image inside the selection rectangle. That small preview must be removed — the selection rectangle itself should be the only visible indicator.
+- Expected behavior: the area outside the selection is dimmed (overlay), the selected rectangle stays visually normal (or slightly highlighted), and draggable handles/border remain. No inner thumbnail, no image duplication drawn inside the selection.
 
-Replace the existing function with:
+What to do (high level):
 
-```ts
-// Helper: convert canvas to blob (promise)
-const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob | null> =>
-  new Promise((res) => {
-    // toBlob callback may pass null in some browsers on error
-    try {
-      canvas.toBlob((b) => res(b), type, quality);
-    } catch (e) {
-      // Some browsers throw on unsupported mime types; return null
-      res(null);
-    }
-  });
+1. Find the code that creates the crop selection (likely a React component under src/components or a cropper module under src/lib). Search for any of the following patterns and open the matching file(s):
+   - className or id strings: "crop", "cropper", "crop-area", "crop-selection", "crop-preview", "preview", "inner-preview"
+   - DOM creation: document.createElement('img'), new Image(), ctx.drawImage(... with coordinates that place a scaled copy inside the selection)
+   - CSS rules that mention `.crop-preview`, `.preview`, `.inner-preview`
+2. Remove the logic that inserts or draws the miniature preview inside the selection. This may be:
+   - An <img> element positioned inside the selection, or
+   - A drawImage call that draws a scaled copy of the full image into the selection rect on a canvas.
+     Replace that logic with code that only draws a dimming overlay and draws the selection border/handles.
 
-// Helper: detect transparency (slow for very large images, but ok for single-file processing)
-const hasTransparency = (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D | null): boolean => {
-  if (!ctx) return false;
-  try {
-    const w = canvas.width;
-    const h = canvas.height;
-    // Sample pixels instead of scanning all to speed up large images:
-    const stepX = Math.max(1, Math.floor(w / 50));
-    const stepY = Math.max(1, Math.floor(h / 50));
-    const data = ctx.getImageData(0, 0, w, h).data;
-    for (let y = 0; y < h; y += stepY) {
-      for (let x = 0; x < w; x += stepX) {
-        const idx = (y * w + x) * 4;
-        const alpha = data[idx + 3];
-        if (alpha < 255) return true;
-      }
-    }
-  } catch (e) {
-    // if getImageData is blocked (cross-origin), assume no transparency to avoid failing.
-    return false;
-  }
-  return false;
+Replace/implement the selection UI using one of the two safe approaches below (choose whichever fits the project style — React/DOM or Canvas). Please keep TypeScript types intact for React components.
+
+A) DOM overlay approach (recommended for React components)
+
+- Create/replace the crop overlay markup with four overlay panels around the selection. The selection area is simply transparent with a visible border. No inner image element is created.
+
+Example: add/replace a component `CropOverlay.tsx`:
+
+```tsx
+// src/components/CropOverlay.tsx
+import React from "react";
+
+export type Rect = { x: number; y: number; width: number; height: number };
+
+interface Props {
+  containerWidth: number;
+  containerHeight: number;
+  selection: Rect;
+  onStartDrag?: (e: React.MouseEvent) => void; // preserve existing drag handlers
+  // handlers for resizing handles if present
+}
+
+const CropOverlay: React.FC<Props> = ({ containerWidth, containerHeight, selection, onStartDrag }) => {
+  const { x, y, width, height } = selection;
+
+  // Boundaries in pixels relative to container
+  return (
+    <div style={{ position: 'absolute', left: 0, top: 0, width: containerWidth, height: containerHeight, pointerEvents: 'none' }}>
+      {/* top overlay */}
+      <div style={{
+        position: 'absolute', left: 0, top: 0, width: '100%', height: y,
+        background: 'rgba(0,0,0,0.45)'
+      }} />
+      {/* left overlay */}
+      <div style={{
+        position: 'absolute', left: 0, top: y, width: x, height,
+        background: 'rgba(0,0,0,0.45)'
+      }} />
+      {/* right overlay */}
+      <div style={{
+        position: 'absolute', left: x + width, top: y, width: containerWidth - (x + width), height,
+        background: 'rgba(0,0,0,0.45)'
+      }} />
+      {/* bottom overlay */}
+      <div style={{
+        position: 'absolute', left: 0, top: y + height, width: '100%', height: containerHeight - (y + height),
+        background: 'rgba(0,0,0,0.45)'
+      }} />
+
+      {/* selection rectangle (transparent center, visible border) */}
+      <div
+        onMouseDown={onStartDrag}
+        style={{
+          position: 'absolute',
+          left: x,
+          top: y,
+          width,
+          height,
+          boxSizing: 'border-box',
+          border: '2px solid rgba(255,255,255,0.95)',
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.25) inset',
+          pointerEvents: 'auto', // allow dragging/resizing
+          background: 'rgba(255,255,255,0.02)' // tiny highlight to show active area if desired
+        }}
+        className="crop-selection-rect"
+      >
+        {/* Keep handles as children if your app uses them. Example handle (top-left) */}
+        <div className="crop-handle tl" style={{
+          position: 'absolute', left: -6, top: -6, width: 12, height: 12, borderRadius: 6,
+          background: '#fff', boxShadow: '0 0 2px rgba(0,0,0,0.5)', pointerEvents: 'auto', cursor: 'nwse-resize'
+        }} />
+        {/* add other handles (tr, bl, br, mid edges) as needed */}
+      </div>
+    </div>
+  );
 };
 
-// Try progressively compressing to targetType (jpeg/webp), decreasing quality until blob.size < original or minQuality reached
-const tryCompressWithQuality = async (
-  canvas: HTMLCanvasElement,
-  originalSize: number,
-  targetType: string,
-  startQuality: number,
-  minQuality = 0.45,
-  step = 0.05
-): Promise<Blob | null> => {
-  let q = Math.min(0.99, Math.max(0.05, startQuality));
-  // try a few rounds; if first attempt already smaller, return it
-  for (let attempt = 0; attempt < 12 && q >= minQuality; attempt++) {
-    const blob = await canvasToBlob(canvas, targetType, targetType === 'image/png' ? undefined : q);
-    if (!blob) { q -= step; continue; }
-    if (blob.size < originalSize || q <= minQuality) return blob;
-    // lower quality and retry
-    q = +(q - step).toFixed(3);
-  }
-  // last fallback: try one final lowest-quality attempt
-  const final = await canvasToBlob(canvas, targetType, minQuality);
-  return final;
-};
+export default CropOverlay;
+Notes:
 
-export const compressImage = async (
-  imageFile: ImageFile,
-  mode: CompressionMode
-): Promise<ProcessedImage> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = async () => {
-      try {
-        // scale logic: keep as before (only shrink for 'maximum' and super-large images)
-        let scale = 1;
-        if (mode === 'maximum' && (img.width > 2000 || img.height > 2000)) {
-          scale = 2000 / Math.max(img.width, img.height);
-        }
+This component does not create or render any smaller preview of the image inside the selection.
 
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
+The dimming is implemented by the 4 panels around the rectangle; this avoids complex clip-paths and is robust across browsers.
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) { reject(new Error('Could not get canvas context')); return; }
+Preserve the existing drag/resize event hooks — they should be attached to the selection rectangle and the handles (pointerEvents: 'auto').
 
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+B) Canvas approach (if the current implementation paints overlays on an HTMLCanvasElement)
 
-        // detect transparency
-        const transparent = hasTransparency(canvas, ctx);
+Remove any drawImage call that paints a scaled copy of the source image into the selection rectangle.
 
-        // choose initial quality based on mode (higher = higher visual quality, lower compression)
-        let startQuality = 0.8;
-        switch (mode) {
-          case 'maximum': startQuality = 0.65; break;
-          case 'quality': startQuality = 0.95; break;
-          case 'balanced':
-          default: startQuality = 0.80; break;
-        }
+Instead draw a translucent overlay over the whole canvas and then clear the selection rect (or re-draw the selection subregion from the original image without scaling it as a separate thumbnail).
 
-        const originalSize = imageFile.size;
+Example (TypeScript, canvas context):
 
-        // capability detection for webp
-        let webpSupported = false;
-        try {
-          // Safari older versions may throw; try toDataURL
-          const tiny = canvas.toDataURL('image/webp');
-          webpSupported = tiny.indexOf('data:image/webp') === 0;
-        } catch (e) {
-          webpSupported = false;
-        }
+ts
+Копировать код
+// In the canvas repaint routine:
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
 
-        // Strategy:
-        // 1) If webpSupported => try webp first (supports alpha).
-        // 2) Else if original is PNG and NOT transparent => convert to JPEG.
-        // 3) Else fallback to original type (PNG or JPEG) using iterative quality (PNG ignores quality).
-        let finalBlob: Blob | null = null;
+// Draw dimming overlay
+ctx.fillStyle = 'rgba(0,0,0,0.45)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (webpSupported) {
-          finalBlob = await tryCompressWithQuality(canvas, originalSize, 'image/webp', startQuality);
-        }
+// Clear the selection rectangle area so it's not dimmed:
+ctx.clearRect(selection.x, selection.y, selection.width, selection.height);
 
-        if (!finalBlob) {
-          // If original is PNG and has no transparency, converting to JPEG can dramatically shrink size.
-          const isPng = imageFile.file.type === 'image/png';
-          if (isPng && !transparent) {
-            // Draw white background behind image to preserve look when converting to JPEG
-            const bgCanvas = document.createElement('canvas');
-            bgCanvas.width = canvas.width;
-            bgCanvas.height = canvas.height;
-            const bgCtx = bgCanvas.getContext('2d');
-            if (bgCtx) {
-              bgCtx.fillStyle = '#ffffff';
-              bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-              bgCtx.drawImage(canvas, 0, 0);
-              finalBlob = await tryCompressWithQuality(bgCanvas, originalSize, 'image/jpeg', startQuality);
-            }
-          }
-        }
+// Draw a border around the selection
+ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+ctx.lineWidth = 2;
+ctx.strokeRect(selection.x + 1, selection.y + 1, selection.width - 2, selection.height - 2);
 
-        if (!finalBlob) {
-          // Last attempts: try JPEG (if original wasn't png with transparency) or original mime type
-          const preferType = imageFile.file.type === 'image/png' && transparent ? 'image/png' : 'image/jpeg';
-          finalBlob = await tryCompressWithQuality(canvas, originalSize, preferType, startQuality);
-        }
+// (Do NOT call ctx.drawImage(sourceImage, srcX, srcY, srcW, srcH, selection.x, selection.y, thumbnailW, thumbnailH)
+// which would draw a mini-thumbnail inside the box)
+Search-and-replace instructions for Gemini:
 
-        if (!finalBlob) {
-          reject(new Error('Failed to create compressed blob'));
-          return;
-        }
+Search repository for occurrences of:
 
-        // compute compression ratio (positive = size reduced, negative = size increased)
-        const compressionRatio = ((originalSize - finalBlob.size) / originalSize) * 100;
+crop-preview, inner-preview, .preview, mini, thumbnail in components / css
 
-        resolve({
-          id: crypto.randomUUID(),
-          originalFile: imageFile,
-          processedBlob: finalBlob,
-          processedUrl: URL.createObjectURL(finalBlob),
-          newWidth: canvas.width,
-          newHeight: canvas.height,
-          newSize: finalBlob.size,
-          compressionRatio, // allow negative values so UI can show growth
-        });
-      } catch (err) {
-        reject(err);
-      }
-    };
+createElement('img') or new Image() near cropping code
 
-    img.onerror = (e) => reject(new Error('Image load error'));
-    // imageFile.preview is a data URL created earlier
-    img.src = imageFile.preview;
-  });
-};
-After the edit, please run TypeScript check / build (for example npm run build or npm run dev) to ensure there are no typing issues and test with sample PNG/JPEG to confirm behavior.
+ctx.drawImage calls that use destination coordinates equal to the selection rectangle (common pattern that creates the small copy)
 
-Notes for Gemini:
+Remove the code that creates the in-selection thumbnail (either the DOM element or the canvas drawImage that draws a scaled image inside the selection).
 
-If you modify helper functions, keep them inside the same file (above compressImage) or export as appropriate.
+Insert the DOM overlay (A) or canvas overlay (B) implementation above into the crop component. Ensure event handlers that manage selection (drag/resize) are preserved and wired to the selection element/handles.
 
-If you want, add a small UI notice in the "сжатие" tab to inform user that PNG without transparency will be converted to JPEG (or WEBP if supported) for better compression, and that transparency is preserved when needed.
+Remove any CSS rules that absolutely position a preview <img> inside the selection (e.g., .crop-inner-preview, .crop-preview img, etc.).
+
+TypeScript / build check:
+
+After changes, run npm run build (or npm run dev) to ensure types and bundling succeed.
+
+Test manually in the app:
+
+Open the crop UI, move and resize the selection. The little thumbnail should not appear anymore.
+
+Verify the outside area is dimmed and selected area remains normal and shows a clear border and handles.
+
+Click the "Crop" action and ensure the final cropped result is unchanged (the cropping logic itself should still read exact selection coordinates).
+
+Optional UX touches (if you want them implemented too):
+
+Add a small semi-opaque background inside the selection (background: rgba(255,255,255,0.02)) to give subtle emphasis without a preview.
+
+Add a tiny tooltip or aria-label to the selection to help keyboard/assistive usage.
+
+If your codebase uses Tailwind, convert inline styles to equivalent utility classes.
+
+Please make the edits, run the build, and then report back any compile errors or the file names you changed so I can help refine the patch or prepare a git diff/patch file.
 ```
