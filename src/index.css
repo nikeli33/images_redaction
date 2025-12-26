@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* NEXSUSBOTS Design System - Blue to Green Tech Aesthetic */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 20% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+
+    /* Primary: Deep Blue */
+    --primary: 205 100% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Teal */
+    --secondary: 175 70% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent: Bright Green */
+    --accent: 100 60% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 45%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 175 70% 40%;
+
+    --radius: 0.75rem;
+
+    /* Custom brand colors */
+    --brand-blue: 205 100% 35%;
+    --brand-teal: 175 70% 40%;
+    --brand-green: 100 60% 50%;
+    --brand-lime: 80 70% 55%;
+    
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, hsl(205 100% 35%) 0%, hsl(175 70% 40%) 50%, hsl(100 60% 50%) 100%);
+    --gradient-button: linear-gradient(135deg, hsl(100 60% 45%) 0%, hsl(80 70% 50%) 100%);
+    --gradient-hover: linear-gradient(135deg, hsl(100 60% 40%) 0%, hsl(80 70% 45%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 20% 20% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 20% 20% / 0.1), 0 2px 4px -2px hsl(220 20% 20% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(220 20% 20% / 0.1), 0 4px 6px -4px hsl(220 20% 20% / 0.1);
+    --shadow-brand: 0 4px 14px 0 hsl(100 60% 50% / 0.3);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 20% 20%;
+    --sidebar-primary: 205 100% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 220 20% 20%;
+    --sidebar-border: 210 20% 90%;
+    --sidebar-ring: 175 70% 40%;
+  }
+
+  .dark {
+    --background: 220 25% 10%;
+    --foreground: 210 20% 95%;
+
+    --card: 220 25% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 175 70% 45%;
+    --primary-foreground: 220 25% 10%;
+
+    --secondary: 205 80% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 100 60% 50%;
+    --accent-foreground: 220 25% 10%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 210 15% 60%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 175 70% 45%;
+
+    --sidebar-background: 220 25% 12%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 175 70% 45%;
+    --sidebar-primary-foreground: 220 25% 10%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 20% 20%;
+    --sidebar-ring: 175 70% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-brand {
+    @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-medium text-accent-foreground transition-all duration-200;
+    background: var(--gradient-button);
+    box-shadow: var(--shadow-brand);
+  }
+
+  .btn-brand:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 hsl(100 60% 50% / 0.4);
+  }
+
+  .text-gradient {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-elevated {
+    @apply bg-card rounded-2xl border border-border;
+    box-shadow: var(--shadow-md);
+  }
+
+  .upload-zone {
+    @apply border-2 border-dashed border-border rounded-2xl p-8 transition-all duration-200 cursor-pointer;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    @apply border-primary bg-primary/5;
+  }
+
+  .tab-active {
+    @apply text-primary border-b-2 border-primary;
+  }
+
+  .progress-bar {
+    background: var(--gradient-brand);
+  }
+}
