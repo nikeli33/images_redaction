@@ -21,7 +21,7 @@ export const loadBackgroundRemovalModel = async (
     }
     return;
   }
-  
+
   isModelLoading = true;
   try {
     onProgress?.(10);
@@ -88,7 +88,8 @@ function resizeImageIfNeeded(
 
 export const removeBackground = async (
   imageFile: ImageFile,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  strength: number = 0.5
 ): Promise<ProcessedImage> => {
   // Load model if not already loaded
   await loadBackgroundRemovalModel(onProgress);
@@ -97,55 +98,68 @@ export const removeBackground = async (
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = async () => {
       try {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         if (!ctx) {
           reject(new Error('Could not get canvas context'));
           return;
         }
-        
+
         resizeImageIfNeeded(canvas, ctx, img);
         onProgress?.(80);
-        
+
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        
+
         const result = await segmenter(imageData);
         onProgress?.(90);
-        
+
         if (!result || !Array.isArray(result) || result.length === 0 || !result[0].mask) {
           reject(new Error('Invalid segmentation result'));
           return;
         }
-        
+
         // Create output canvas
         const outputCanvas = document.createElement('canvas');
         outputCanvas.width = canvas.width;
         outputCanvas.height = canvas.height;
         const outputCtx = outputCanvas.getContext('2d');
-        
+
         if (!outputCtx) {
           reject(new Error('Could not get output canvas context'));
           return;
         }
-        
+
         outputCtx.drawImage(canvas, 0, 0);
-        
+
         const outputImageData = outputCtx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
         const data = outputImageData.data;
-        
-        // Apply inverted mask to alpha channel
+
+        // Apply inverted mask to alpha channel with strength control
+        // strength: 0 = preserve more background, 1 = aggressive removal
+        const threshold = 1 - strength; // Convert strength to threshold (higher strength = lower threshold)
         for (let i = 0; i < result[0].mask.data.length; i++) {
-          const alpha = Math.round((1 - result[0].mask.data[i]) * 255);
+          const maskValue = result[0].mask.data[i];
+          // Apply threshold based on strength
+          // Values below threshold become transparent, above become opaque
+          let alpha: number;
+          if (maskValue >= threshold) {
+            // Background pixel - make transparent
+            alpha = 0;
+          } else {
+            // Foreground pixel - calculate alpha with smooth transition
+            const normalizedValue = maskValue / Math.max(threshold, 0.01);
+            alpha = Math.round((1 - normalizedValue) * 255);
+          }
           data[i * 4 + 3] = alpha;
         }
-        
+
         outputCtx.putImageData(outputImageData, 0, 0);
         onProgress?.(95);
-        
+
         // Convert to blob (PNG for transparency)
         outputCanvas.toBlob(
           (blob) => {
@@ -171,7 +185,7 @@ export const removeBackground = async (
         reject(error);
       }
     };
-    
+
     img.onerror = () => reject(new Error('Failed to load image'));
     img.src = imageFile.preview;
   });

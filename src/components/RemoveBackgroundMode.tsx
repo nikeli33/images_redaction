@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import ImageUploader from './ImageUploader';
 import ProcessingResults from './ProcessingResults';
 import { ImageFile, ProcessedImage } from '@/lib/imageProcessing';
@@ -14,6 +15,7 @@ const RemoveBackgroundMode = () => {
   const [progress, setProgress] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [modelLoading, setModelLoading] = useState(false);
+  const [strength, setStrength] = useState(50); // 0-100, степень удаления фона
 
   const handleProcess = useCallback(async () => {
     if (images.length === 0) {
@@ -31,17 +33,17 @@ const RemoveBackgroundMode = () => {
     try {
       for (let i = 0; i < images.length; i++) {
         setCurrentImageIndex(i);
-        
+
         const result = await removeBackground(images[i], (p) => {
           const baseProgress = (i / images.length) * 100;
           const imageProgress = (p / 100) * (100 / images.length);
           setProgress(Math.round(baseProgress + imageProgress));
-          
+
           if (p >= 70) {
             setModelLoading(false);
           }
-        });
-        
+        }, strength / 100); // Конвертируем 0-100 в 0-1
+
         processedResults.push(result);
       }
 
@@ -55,7 +57,7 @@ const RemoveBackgroundMode = () => {
       setModelLoading(false);
       setProgress(0);
     }
-  }, [images]);
+  }, [images, strength]);
 
   const handleReset = () => {
     setImages([]);
@@ -84,8 +86,8 @@ const RemoveBackgroundMode = () => {
         </p>
       </div>
 
-      <ImageUploader 
-        images={images} 
+      <ImageUploader
+        images={images}
         onImagesChange={setImages}
         maxFiles={10}
       />
@@ -99,9 +101,35 @@ const RemoveBackgroundMode = () => {
               <div className="text-sm text-muted-foreground">
                 <p className="font-medium text-foreground mb-1">Как это работает</p>
                 <p>
-                  Используется нейросеть для сегментации изображения. 
+                  Используется нейросеть для сегментации изображения.
                   Первая обработка может занять больше времени из-за загрузки модели.
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Strength Slider */}
+          <div className="bg-muted/30 rounded-xl p-4 border border-border">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">
+                  Степень удаления фона
+                </label>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {strength}%
+                </span>
+              </div>
+              <Slider
+                value={[strength]}
+                onValueChange={(value) => setStrength(value[0])}
+                min={0}
+                max={100}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Мягко</span>
+                <span>Агрессивно</span>
               </div>
             </div>
           </div>
@@ -117,8 +145,8 @@ const RemoveBackgroundMode = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>
-                    {modelLoading 
-                      ? 'Загрузка модели...' 
+                    {modelLoading
+                      ? 'Загрузка модели...'
                       : `Обработка ${currentImageIndex + 1}/${images.length}...`
                     }
                   </span>
@@ -136,7 +164,7 @@ const RemoveBackgroundMode = () => {
           {isProcessing && (
             <div className="space-y-2">
               <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-brand-blue to-brand-green transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
