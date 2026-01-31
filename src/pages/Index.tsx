@@ -9,6 +9,7 @@ import RemoveBackgroundMode from '@/components/RemoveBackgroundMode';
 import RemoveWatermarkMode from '@/components/RemoveWatermarkMode';
 import RotateMode from '@/components/RotateMode';
 import ConvertMode from '@/components/ConvertMode';
+import ConvertToJpgMode from '@/components/ConvertToJpgMode';
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<ProcessingMode>('resize');
@@ -29,6 +30,8 @@ const Index = () => {
         return <RotateMode />;
       case 'convert':
         return <ConvertMode />;
+      case 'convert-jpg':
+        return <ConvertToJpgMode />;
       default:
         return <ResizeMode />;
     }
