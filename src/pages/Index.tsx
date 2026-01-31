@@ -8,6 +8,7 @@ import CompressMode from '@/components/CompressMode';
 import RemoveBackgroundMode from '@/components/RemoveBackgroundMode';
 import RemoveWatermarkMode from '@/components/RemoveWatermarkMode';
 import RotateMode from '@/components/RotateMode';
+import ConvertMode from '@/components/ConvertMode';
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<ProcessingMode>('resize');
@@ -26,6 +27,8 @@ const Index = () => {
         return <RemoveWatermarkMode />;
       case 'rotate':
         return <RotateMode />;
+      case 'convert':
+        return <ConvertMode />;
       default:
         return <ResizeMode />;
     }

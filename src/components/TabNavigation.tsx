@@ -1,6 +1,6 @@
-import { Maximize2, Crop, FileDown, Wand2, Eraser, RotateCw } from 'lucide-react';
+import { Maximize2, Crop, FileDown, Wand2, Eraser, RotateCw, FileImage } from 'lucide-react';
 
-export type ProcessingMode = 'resize' | 'crop' | 'compress' | 'remove-bg' | 'remove-watermark' | 'rotate';
+export type ProcessingMode = 'resize' | 'crop' | 'compress' | 'remove-bg' | 'remove-watermark' | 'rotate' | 'convert';
 
 interface TabNavigationProps {
   activeMode: ProcessingMode;
@@ -15,6 +15,7 @@ const tabs = [
   { id: 'compress' as ProcessingMode, label: 'Сжать', icon: FileDown },
   { id: 'remove-bg' as ProcessingMode, label: 'Удалить фон', icon: Wand2 },
   { id: 'remove-watermark' as ProcessingMode, label: 'Удалить водяной знак', icon: Eraser },
+  { id: 'convert' as ProcessingMode, label: 'JPG в PNG', icon: FileImage },
 ];
 
 const TabNavigation = ({ activeMode, onModeChange, disabled }: TabNavigationProps) => {
