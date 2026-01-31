@@ -1,6 +1,6 @@
-import { Maximize2, Crop, FileDown, Wand2, Eraser } from 'lucide-react';
+import { Maximize2, Crop, FileDown, Wand2, Eraser, RotateCw } from 'lucide-react';
 
-export type ProcessingMode = 'resize' | 'crop' | 'compress' | 'remove-bg' | 'remove-watermark';
+export type ProcessingMode = 'resize' | 'crop' | 'compress' | 'remove-bg' | 'remove-watermark' | 'rotate';
 
 interface TabNavigationProps {
   activeMode: ProcessingMode;
@@ -11,6 +11,7 @@ interface TabNavigationProps {
 const tabs = [
   { id: 'resize' as ProcessingMode, label: 'Изменить размер', icon: Maximize2 },
   { id: 'crop' as ProcessingMode, label: 'Обрезать', icon: Crop },
+  { id: 'rotate' as ProcessingMode, label: 'Повернуть', icon: RotateCw },
   { id: 'compress' as ProcessingMode, label: 'Сжать', icon: FileDown },
   { id: 'remove-bg' as ProcessingMode, label: 'Удалить фон', icon: Wand2 },
   { id: 'remove-watermark' as ProcessingMode, label: 'Удалить водяной знак', icon: Eraser },
@@ -24,7 +25,7 @@ const TabNavigation = ({ activeMode, onModeChange, disabled }: TabNavigationProp
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeMode === tab.id;
-            
+
             return (
               <button
                 key={tab.id}
@@ -33,8 +34,8 @@ const TabNavigation = ({ activeMode, onModeChange, disabled }: TabNavigationProp
                 className={`
                   flex items-center gap-2.5 px-6 py-4 text-sm font-medium transition-all duration-200
                   border-b-2 whitespace-nowrap relative
-                  ${isActive 
-                    ? 'text-primary border-primary' 
+                  ${isActive
+                    ? 'text-primary border-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }
                   ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}

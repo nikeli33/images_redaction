@@ -7,6 +7,7 @@ import CropMode from '@/components/CropMode';
 import CompressMode from '@/components/CompressMode';
 import RemoveBackgroundMode from '@/components/RemoveBackgroundMode';
 import RemoveWatermarkMode from '@/components/RemoveWatermarkMode';
+import RotateMode from '@/components/RotateMode';
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<ProcessingMode>('resize');
@@ -23,6 +24,8 @@ const Index = () => {
         return <RemoveBackgroundMode />;
       case 'remove-watermark':
         return <RemoveWatermarkMode />;
+      case 'rotate':
+        return <RotateMode />;
       default:
         return <ResizeMode />;
     }
@@ -32,18 +35,18 @@ const Index = () => {
     <>
       <Helmet>
         <title>Инструменты для изображений - Изменить размер, Обрезать и Сжать онлайн | Бесплатно</title>
-        <meta 
-          name="description" 
-          content="Бесплатные онлайн инструменты для обработки изображений. Измените размер до точных пикселей, обрежьте с точностью и сожмите для уменьшения размера файла с сохранением качества. Поддержка JPG и PNG." 
+        <meta
+          name="description"
+          content="Бесплатные онлайн инструменты для обработки изображений. Измените размер до точных пикселей, обрежьте с точностью и сожмите для уменьшения размера файла с сохранением качества. Поддержка JPG и PNG."
         />
         <meta name="keywords" content="изменить размер изображения, обрезать изображение, сжать изображение, обработка изображений, онлайн инструменты, jpg компрессор, png оптимизатор" />
         <link rel="canonical" href="/" />
       </Helmet>
-      
+
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
         <TabNavigation activeMode={activeMode} onModeChange={setActiveMode} />
-        
+
         <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
           <div className="max-w-4xl mx-auto">
             {renderMode()}
